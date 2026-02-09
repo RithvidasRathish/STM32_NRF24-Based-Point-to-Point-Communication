@@ -1,53 +1,89 @@
-**nRF24L01 Point-to-Point Communication using STM32
+# nRF24L01 Point-to-Point Communication using STM32
 
-This repository demonstrates node-to-node (point-to-point) wireless communication using the nRF24L01 2.4 GHz RF module with STM32 microcontrollers.
-The project uses SPI-based communication, hardware CRC, and FIFO buffering provided by the nRF24L01 for reliable data transfer.
+This project demonstrates **reliable point-to-point (P2P) wireless communication** using the **nRF24L01 2.4 GHz transceiver** with **STM32 microcontrollers**.  
+It focuses on **register-level operation**, **STATUS flag handling**, and **address + channel configuration** for robust packet-based communication.
 
-📡 Project Overview
+---
 
-TX Node: STM32 Blue Pill (STM32F103)
+## 📌 Project Summary
 
-RX Node: STM32 Black Pill (STM32F4 series)
+- **TX Node:** STM32 Blue Pill (STM32F103)
+- **RX Node:** STM32 Black Pill (STM32F4 series)
+- **Wireless Module:** nRF24L01
+- **Protocol:** Proprietary 2.4 GHz (ShockBurst™)
+- **Payload Size:** Up to 32 bytes
+- **Interface:** SPI
+- **Debug Interface:** UART (115200 baud)
 
-Wireless Module: nRF24L01
+The transmitter periodically sends data, while the receiver detects incoming packets using the **STATUS register (RX_DR flag)** and processes them in real time.
 
-Communication Type: Point-to-Point (P2P)
+---
 
-Payload: "Hello World"
+## ✨ Key Features
 
-Interface: SPI
+- Point-to-point wireless communication
+- 5-byte address-based packet filtering
+- Fixed RF channel configuration
+- Hardware CRC verification
+- RX FIFO buffering (up to 3 payloads)
+- STATUS register–based packet detection
+- UART output for received payload
+- LED indication for TX/RX activity
 
-Debug Output: UART (115200 baud)
+---
 
-The transmitter sends data periodically, and the receiver detects incoming packets using the STATUS register and processes them in real time.
+## 🛠 Hardware Requirements
 
-🧩 Features
+### Transmitter (TX)
+- STM32 Blue Pill (STM32F103)
+- nRF24L01 module
 
-nRF24L01 TX/RX mode configuration
+### Receiver (RX)
+- STM32 Black Pill (STM32F4)
+- nRF24L01 module
 
-5-byte address-based filtering
+⚠️ **Important:**  
+nRF24L01 operates at **3.3 V only**. Do NOT connect to 5 V.
 
-Fixed RF channel selection
+---
 
-Hardware CRC validation
+## 📶 Address and Channel Configuration
 
-RX FIFO-based payload buffering
+- **Address Width:** 5 bytes
+- EE DD CC BB AA
+- Same address configured on both TX and RX
+- Communication occurs on a **fixed RF channel** (0–125 range) -  CHANNEL 10 
+- Only packets matching **both address and channel** are accepted
 
-STATUS register–based packet detection
+This combination provides logical separation between different wireless links.
 
-UART output for received data
+---
 
-LED indication for TX/RX events
+## 🧠 Packet Reception Mechanism (STATUS Register)
 
-🛠 Hardware Used
-Transmitter (TX)
+The nRF24L01 uses the **STATUS register (0x07)** to signal events.
 
-STM32 Blue Pill (STM32F103)
+### RX Flow:
+1. Packet arrives on the configured address and channel
+2. nRF24L01 performs **hardware CRC check**
+3. Payload is pushed into the **RX FIFO**
+4. **RX_DR (Data Ready)** bit is set in STATUS
+5. MCU polls STATUS using `isDataAvailable()`
+6. Payload is read using `R_RX_PAYLOAD`
+7. RX_DR flag is cleared by writing `1` to STATUS
 
-nRF24L01 module
+This ensures efficient packet handling with minimal MCU overhead.
 
-Receiver (RX)
+---
 
-STM32 Black Pill (STM32F4)
+## 💻 Software Stack
 
-nRF24L01 module**
+- STM32 HAL drivers
+- SPI-based nRF24L01 driver
+- Polling-based RX 
+- UART for debugging and data logging
+
+---
+
+
+
